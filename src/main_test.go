@@ -17,3 +17,28 @@ func TestCalculateBalance(t *testing.T) {
 		t.Errorf("Expected %.2f, got %.2f", expectedResult, result)
 	}
 }
+
+func TestParseRequestBodySuccess(t *testing.T) {
+	request := `
+		{
+			"numOfFullPrice": 1,
+			"numOfConcessions": 2
+		}
+	`
+	var pr PaymentRequest
+	err := ParseRequestBody(request, &pr)
+	if err != nil {
+		t.Errorf("Expected no error, got %s", err)
+	}
+}
+
+func TestParseRequestBodyNoBody(t *testing.T) {
+	request := ""
+	var pr PaymentRequest
+	err := ParseRequestBody(request, &pr)
+	errMessage, ok := err.(ErrInvalidRequestBody)
+	if !ok {
+		t.Errorf("Expected err: '%s', got '%s'", err.(ErrInvalidRequestBody), errMessage)
+	}
+
+}

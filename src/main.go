@@ -13,22 +13,37 @@ var (
 	concessionCostStr = os.Getenv("CONCESSION_COST")
 )
 
-type PaymentRequest struct {
-	NumOfFullPrice   uint8
-	numOfConcessions uint8
+type ErrInvalidRequestBody struct {
+	Message string
 }
 
+func (e ErrInvalidRequestBody) Error() string {
+	return e.Message
+}
+
+// PaymentRequest is a struct representing the json object passed to the lambda containing ticket and payment details
+type PaymentRequest struct {
+	NumOfFullPrice   *uint8 `json:"numOfFullPrice"`
+	NumOfConcessions *uint8 `json:"numOfConcessions"`
+}
+
+// CalculateBalance calculates the total due for the num of tickets ordered, taking into account different ticket costs
 func CalculateBalance(numOfFullPrice uint8, fullPriceCost float32, numOfConcessions uint8, concessionCost float32) (total float32) {
 	total = float32(numOfConcessions)*fullPriceCost + float32(numOfConcessions)*concessionCost
 	return total
 }
 
+// ParseRequestBody takes the request body as string and unmarshals it into the PaymentRequest struct
 func ParseRequestBody(request string, payReq *PaymentRequest) (err error) {
 	br := []byte(request)
 	err = json.Unmarshal(br, payReq)
+	if payReq.NumOfFullPrice == nil || payReq.NumOfConcessions == nil {
+		err = ErrInvalidRequestBody{Message: "no value present for num of full price or num of concession tickets"}
+	}
 	return
 }
 
+// Handler function is the entry point for the lambda function
 func Handler(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
 	response := events.APIGatewayProxyResponse{
 		StatusCode: 404,
