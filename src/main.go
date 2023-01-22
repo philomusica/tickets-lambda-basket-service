@@ -3,11 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/philomusica/tickets-lambda-get-concerts/lib/ddbHandler"
 )
 
 type ErrInvalidRequestBody struct {
@@ -20,6 +21,7 @@ func (e ErrInvalidRequestBody) Error() string {
 
 // PaymentRequest is a struct representing the json object passed to the lambda containing ticket and payment details
 type PaymentRequest struct {
+	ConcertId        string  `json:"concertId"`
 	NumOfFullPrice   *uint8 `json:"numOfFullPrice"`
 	NumOfConcessions *uint8 `json:"numOfConcessions"`
 }
@@ -34,7 +36,7 @@ func CalculateBalance(numOfFullPrice uint8, fullPriceCost float32, numOfConcessi
 func ParseRequestBody(request string, payReq *PaymentRequest) (err error) {
 	br := []byte(request)
 	err = json.Unmarshal(br, payReq)
-	if payReq.NumOfFullPrice == nil || payReq.NumOfConcessions == nil {
+	if err != nil || payReq.NumOfFullPrice == nil || payReq.NumOfConcessions == nil || payReq.ConcertId == "" {
 		err = ErrInvalidRequestBody{Message: "no value present for num of full price or num of concession tickets"}
 	}
 	return
@@ -42,8 +44,6 @@ func ParseRequestBody(request string, payReq *PaymentRequest) (err error) {
 
 // Handler function is the entry point for the lambda function
 func Handler(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
-	fullPriceCostStr  := os.Getenv("FULL_PRICE_COST")
-	concessionCostStr := os.Getenv("CONCESSION_COST")
 	response := events.APIGatewayProxyResponse{
 		StatusCode: 404,
 		Body:       "Payment Failed. Please try again later",
@@ -56,20 +56,16 @@ func Handler(request events.APIGatewayProxyRequest) events.APIGatewayProxyRespon
 		return response
 	}
 
-	fullPrice, err := strconv.ParseFloat(fullPriceCostStr, 32)
+	sess := session.New()
+	svc := dynamodb.New(sess)
+	var concert *ddbHandler.Concert
+	concert, err = ddbHandler.GetConcertFromDynamoDB(svc, payReq.ConcertId)
 	if err != nil {
-		fmt.Printf("Unable to parse %s as float\n", fullPriceCostStr)
+		fmt.Printf("Error getting concert from database %s\n", err)
 		return response
 	}
 
-	concessionPrice, err := strconv.ParseFloat(concessionCostStr, 32)
-	if err != nil {
-		fmt.Printf("Unable to parse %s as float\n", fullPriceCostStr)
-		return response
-	}
-
-	result := CalculateBalance(*payReq.NumOfFullPrice, float32(fullPrice), *payReq.NumOfConcessions, float32(concessionPrice))
-	fmt.Printf("Result is + %f\n", result)
+	_ = CalculateBalance(*payReq.NumOfFullPrice, concert.FullPrice, *payReq.NumOfConcessions, concert.ConcessionPrice)
 
 	response.StatusCode = 200
 	response.Body = "payment successful"

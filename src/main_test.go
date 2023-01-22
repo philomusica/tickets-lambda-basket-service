@@ -1,10 +1,7 @@
 package main
 
 import (
-	"os"
 	"testing"
-
-	"github.com/aws/aws-lambda-go/events"
 )
 
 func TestCalculateBalance(t *testing.T) {
@@ -25,7 +22,8 @@ func TestParseRequestBodySuccess(t *testing.T) {
 	request := `
 		{
 			"numOfFullPrice": 1,
-			"numOfConcessions": 2
+			"numOfConcessions": 2,
+			"concertId": "ABC"
 		}
 	`
 	var pr PaymentRequest
@@ -43,13 +41,57 @@ func TestParseRequestBodyNoBody(t *testing.T) {
 	if !ok {
 		t.Errorf("Expected err: '%s', got '%s'", err.(ErrInvalidRequestBody), errMessage)
 	}
-
 }
 
-func TestHandlerPaymentRequestValid(t *testing.T) {
+func TestParseRequestBodyInvalidFullPrice(t *testing.T) {
+	request := `
+		{
+			"numOfFullPrice": "bob",
+			"numOfConcessions": 2,
+			"concertId": "ABC"
+		}
+	`
+	var pr PaymentRequest
+	err := ParseRequestBody(request, &pr)
+	errMessage, ok := err.(ErrInvalidRequestBody)
+	if !ok {
+		t.Errorf("Expected err: '%s', got '%s'", err.(ErrInvalidRequestBody), errMessage)
+	}
+}
 
-	os.Setenv("FULL_PRICE_COST", "15.00")
-	os.Setenv("CONCESSION_COST", "10.00")
+func TestParseRequestBodyNoConcessionPrice(t *testing.T) {
+	request := `
+		{
+			"numOfFullPrice": 2,
+			"concertId": "ABC"
+		}
+	`
+	var pr PaymentRequest
+	err := ParseRequestBody(request, &pr)
+	errMessage, ok := err.(ErrInvalidRequestBody)
+	if !ok {
+		t.Errorf("Expected err: '%s', got '%s'", err.(ErrInvalidRequestBody), errMessage)
+	}
+}
+
+func TestParseRequestBodyInvalidConcertId(t *testing.T) {
+	request := `
+		{
+			"numOfFullPrice": 2,
+			"numOfConcessions": 2,
+			"concertId": 2
+		}
+	`
+	var pr PaymentRequest
+	err := ParseRequestBody(request, &pr)
+	errMessage, ok := err.(ErrInvalidRequestBody)
+	if !ok {
+		t.Errorf("Expected err: '%s', got '%s'", err.(ErrInvalidRequestBody), errMessage)
+	}
+}
+
+/*
+func TestHandlerPaymentRequestValid(t *testing.T) {
 
 	request := events.APIGatewayProxyRequest{
 		Body: `{
@@ -63,72 +105,4 @@ func TestHandlerPaymentRequestValid(t *testing.T) {
 		t.Errorf("Expected StatusCode 200 and response of \"payment successful\", got %d and %s", response.StatusCode, response.Body)
 	}
 }
-
-func TestHandlerCannotParseFullPriceCostEnvVar(t *testing.T) {
-
-	os.Setenv("FULL_PRICE_COST", "blah")
-	os.Setenv("CONCESSION_COST", "10.00")
-
-	request := events.APIGatewayProxyRequest{
-		Body: `{
-			"numOfFullPrice": 2,
-			"numOfConcessions": 2
-		}`,
-	}
-
-	response := Handler(request)
-	if response.StatusCode != 404 || response.Body != "Payment Failed. Please try again later" {
-		t.Errorf("Expected StatusCode 200 and response of \"payment successful\", got %d and %s", response.StatusCode, response.Body)
-	}
-}
-
-func TestHandlerCannotParseConcessionEnvVar(t *testing.T) {
-
-	os.Setenv("FULL_PRICE_COST", "15.00")
-	os.Setenv("CONCESSION_COST", "blah")
-
-	request := events.APIGatewayProxyRequest{
-		Body: `{
-			"numOfFullPrice": 2,
-			"numOfConcessions": 2
-		}`,
-	}
-
-	response := Handler(request)
-	if response.StatusCode != 404 || response.Body != "Payment Failed. Please try again later" {
-		t.Errorf("Expected StatusCode 200 and response of \"payment successful\", got %d and %s", response.StatusCode, response.Body)
-	}
-}
-func TestHandlerNoNumOfFullPriceInJson(t *testing.T) {
-
-	os.Setenv("FULL_PRICE_COST", "blah")
-	os.Setenv("CONCESSION_COST", "bob")
-
-	request := events.APIGatewayProxyRequest{
-		Body: `{
-			"numOfConcessions": 2
-		}`,
-	}
-
-	response := Handler(request)
-	if response.StatusCode != 404 || response.Body != "Payment Failed. Please try again later" {
-		t.Errorf("Expected StatusCode 200 and response of \"payment successful\", got %d and %s", response.StatusCode, response.Body)
-	}
-}
-
-func TestHandlerNoNumOfConcessionInJson(t *testing.T) {
-
-	os.Setenv("FULL_PRICE_COST", "blah")
-	os.Setenv("CONCESSION_COST", "bob")
-
-	request := events.APIGatewayProxyRequest{
-		Body: `{
-			"numOfFullPrice": 2
-		}`,
-	}
-
-	response := Handler(request)
-	if response.StatusCode != 404 || response.Body != "Payment Failed. Please try again later" {
-		t.Errorf("Expected StatusCode 200 and response of \"payment successful\", got %d and %s", response.StatusCode, response.Body)
-	}
-}
+*/

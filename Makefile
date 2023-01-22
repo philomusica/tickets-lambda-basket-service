@@ -2,6 +2,7 @@
 BINDIR:=./bin
 ZIPFILE:=function.zip
 BINARY:=main
+REPORT:=./report
 
 deps:
 	go get -u ./...
@@ -21,8 +22,14 @@ else
 endif
 
 test:
-	go test -v -coverprofile cover.out ./...
+	go test -v -cover ./...
 
+cover:
+	mkdir -p $(REPORT)
+	go test ./... -coverprofile $(REPORT)/cover.out
+	go tool cover -html=$(REPORT)/cover.out -o $(REPORT)/index.html
+	cd $(REPORT) && python3 -m http.server 8000
+	
 vet:
 	go vet ./...
 
