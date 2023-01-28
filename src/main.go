@@ -21,7 +21,7 @@ func (e ErrInvalidRequestBody) Error() string {
 
 // PaymentRequest is a struct representing the json object passed to the lambda containing ticket and payment details
 type PaymentRequest struct {
-	ConcertId        string  `json:"concertId"`
+	ConcertId        string `json:"concertId"`
 	NumOfFullPrice   *uint8 `json:"numOfFullPrice"`
 	NumOfConcessions *uint8 `json:"numOfConcessions"`
 }
