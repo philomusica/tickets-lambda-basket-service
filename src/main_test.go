@@ -1,8 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"testing"
-
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler"
 )
@@ -12,6 +12,7 @@ var (
 	paymentFailedResponse       string = "Payment Failed. Please try again later"
 	paymentSuccessfulStatusCode int    = 200
 	paymentSuccessfulResponse   string = "payment successful"
+	concertInPastErrMesage string = "Error concert x in the past, tickets are no longer avaiable"
 )
 
 func TestCalculateBalance(t *testing.T) {
@@ -109,8 +110,10 @@ func TestHandlerInvalidRequest(t *testing.T) {
 	}
 
 	response := Handler(request)
-	if response.StatusCode != 404 || response.Body != paymentFailedResponse {
-		t.Errorf("Expected statusCode %d and Body %s, got %d and %s", paymentFailedStatusCode, paymentFailedResponse, response.StatusCode, response.Body)
+	expectedStatusCode := 400
+	expectedResponseBody := "Invalid request"
+	if response.StatusCode != expectedStatusCode || response.Body != expectedResponseBody {
+		t.Errorf("Expected statusCode %d and Body %s, got %d and %s", expectedStatusCode, expectedResponseBody, response.StatusCode, response.Body)
 	}
 }
 
@@ -134,10 +137,41 @@ func TestProcessPaymentConcertInPast(t *testing.T) {
 	}
 
 	mockHandler := mockDDBHandlerConcertInPast{}
-	err := processPayment(request, mockHandler)
-	expectedErr, ok := err.(databaseHandler.ErrConcertInPast)
+	response := processPayment(request, mockHandler)
 
-	if !ok {
-		t.Errorf("Expected %s, got %s\n", expectedErr, err)
+	expectedStatusCode := 400
+	if response.StatusCode != expectedStatusCode || response.Body != concertInPastErrMesage {
+		t.Errorf("Expected statusCode %d and Body %s, got %d and %s", expectedStatusCode, concertInPastErrMesage, response.StatusCode, response.Body)
+	}
+}
+
+type mockDDBHandlerInsufficientTickets struct {
+	databaseHandler.DatabaseHandler
+}
+
+func (m mockDDBHandlerInsufficientTickets) GetConcertFromDatabase(concertID string) (concert *databaseHandler.Concert, err error) {
+	concert = &databaseHandler.Concert{
+		AvailableTickets: 9,
+		Description: "summer concert",
+	}
+	return
+}
+
+func TestProcessPaymentInsufficientTicketsAvailable(t *testing.T) {
+	request := events.APIGatewayProxyRequest{
+		Body: `{
+			"numOfFullPrice": 8,
+			"numOfConcessions": 2,
+			"concertId": "ABC"
+		}`,
+	}
+
+	mockHandler := mockDDBHandlerInsufficientTickets{}
+	response := processPayment(request, mockHandler)
+
+	expectedStatusCode := 403
+	expectedResponseBody := fmt.Sprintf("Insufficient tickets available for %s\n", "summer concert")
+	if response.StatusCode != expectedStatusCode || response.Body != expectedResponseBody {
+		t.Errorf("Expected statusCode %d and Body %s, got %d and %s", expectedStatusCode, expectedResponseBody, response.StatusCode, response.Body)
 	}
 }

@@ -20,6 +20,14 @@ func (e ErrInvalidRequestBody) Error() string {
 	return e.Message
 }
 
+type ErrInsufficientAvailableTickets struct {
+	Message string
+}
+
+func (e ErrInsufficientAvailableTickets) Error() string {
+	return e.Message
+}
+
 // paymentRequest is a struct representing the json object passed to the lambda containing ticket and payment details
 type paymentRequest struct {
 	ConcertId        string `json:"concertId"`
@@ -43,16 +51,33 @@ func parseRequestBody(request string, payReq *paymentRequest) (err error) {
 	return
 }
 
-func processPayment(request events.APIGatewayProxyRequest, handler databaseHandler.DatabaseHandler) (err error) {
+func processPayment(request events.APIGatewayProxyRequest, handler databaseHandler.DatabaseHandler) (response events.APIGatewayProxyResponse) {
+	response = events.APIGatewayProxyResponse{
+		StatusCode: 404,
+		Body:       "Payment Failed. Please try again later",
+	}
+
 	var payReq paymentRequest
-	err = parseRequestBody(request.Body, &payReq)
+	err := parseRequestBody(request.Body, &payReq)
 	if err != nil {
+		response.StatusCode = 400
+		response.Body = "Invalid request"
 		return
 	}
 
 	var concert *databaseHandler.Concert
 	concert, err = handler.GetConcertFromDatabase(payReq.ConcertId)
 	if err != nil {
+		response.StatusCode = 400
+		response.Body = err.Error()
+		return
+	}
+
+	ticketTotal := *payReq.NumOfFullPrice + *payReq.NumOfConcessions
+	if concert.AvailableTickets < ticketTotal {
+		err = ErrInsufficientAvailableTickets{Message: fmt.Sprintf("Insufficient tickets available for %s\n", concert.Description)}
+		response.StatusCode = 403
+		response.Body = err.Error()
 		return
 	}
 
@@ -62,24 +87,13 @@ func processPayment(request events.APIGatewayProxyRequest, handler databaseHandl
 
 // Handler function is the entry point for the lambda function
 func Handler(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
-	response := events.APIGatewayProxyResponse{
-		StatusCode: 404,
-		Body:       "Payment Failed. Please try again later",
-	}
 
 	sess := session.New()
 	svc := dynamodb.New(sess)
 	handler := ddbHandler.New(svc)
 
-	err := processPayment(request, handler)
-	if err != nil {
-		fmt.Println(err)
-		return response
-	}
+	return processPayment(request, handler)
 
-	response.StatusCode = 200
-	response.Body = "payment successful"
-	return response
 }
 func main() {
 	lambda.Start(Handler)
