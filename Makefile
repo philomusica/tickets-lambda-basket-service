@@ -6,7 +6,8 @@ REPORT:=./report
 
 $(BINARY):
 	mkdir -p $(BINDIR) 
-	GOOS=linux GOARCH=amd64 go build -o $(BINDIR)/$(BINARY) ./...
+#	GOOS=linux GOARCH=amd64 go build -gcflags="-m" -o $(BINDIR)/$(BINARY) $(CMD)
+	GOOS=linux GOARCH=amd64 go build -o $(BINDIR)/$(BINARY) $(CMD)
 
 .PHONY: deps clean deploy test vet fmt
 deps:

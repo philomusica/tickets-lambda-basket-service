@@ -1,4 +1,4 @@
-module main
+module github.com/philomusica/tickets-lambda-process-payment
 
 go 1.18
 
