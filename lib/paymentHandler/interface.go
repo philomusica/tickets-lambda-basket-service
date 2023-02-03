@@ -10,6 +10,13 @@ type OrderLine struct {
 	NumOfConcessions *uint8 `json:"numOfConcessions"`
 }
 
+type Order struct {
+	Reference string `jsong:"reference"`
+	FirstName string `json:"firstName"`
+	LastName string `json:"lastName"`
+	Email string `json:"email"`
+	OL []OrderLine `json:"ol"`
+}
 
 // PaymentRequest is a struct representing the json object passed to the lambda containing ticket and payment details
 type PaymentRequest struct {
