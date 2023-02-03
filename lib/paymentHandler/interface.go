@@ -15,7 +15,7 @@ type Order struct {
 	FirstName string `json:"firstName"`
 	LastName string `json:"lastName"`
 	Email string `json:"email"`
-	OL []OrderLine `json:"ol"`
+	OL OrderLine `json:"ol"`
 }
 
 // PaymentRequest is a struct representing the json object passed to the lambda containing ticket and payment details
