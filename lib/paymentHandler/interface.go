@@ -11,11 +11,13 @@ type OrderLine struct {
 }
 
 type Order struct {
-	Reference string `jsong:"reference"`
+	ConcertId string `json:"concertId"`
+	Reference string `json:"reference"`
 	FirstName string `json:"firstName"`
 	LastName string `json:"lastName"`
 	Email string `json:"email"`
-	OL OrderLine `json:"ol"`
+	NumOfFullPrice uint8 `json:"numOfFullPrice"`
+	NumOfConcessions uint8 `json:"numOfConcessions"`
 }
 
 // PaymentRequest is a struct representing the json object passed to the lambda containing ticket and payment details
