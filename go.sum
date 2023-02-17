@@ -16,6 +16,8 @@ github.com/aws/aws-sdk-go v1.44.189 h1:9PBrjndH1uL5AN8818qI3duhQ4hgkMuLvqkJlg9MR
 github.com/aws/aws-sdk-go v1.44.189/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go v1.44.197 h1:pkg/NZsov9v/CawQWy+qWVzJMIZRQypCtYjUBXFomF8=
 github.com/aws/aws-sdk-go v1.44.197/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.199 h1:hYuQmS4zLMJR9v2iOp2UOD6Vi/0V+nwyR/Uhrkrtlbc=
+github.com/aws/aws-sdk-go v1.44.199/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
@@ -34,6 +36,8 @@ github.com/philomusica/tickets-lambda-get-concerts v1.4.0 h1:uu6KsW2+mSmzQcJo7W3
 github.com/philomusica/tickets-lambda-get-concerts v1.4.0/go.mod h1:+GHuek/iNV4MLe7jbGUa1kIONc0AIqa8xgvKQpZV7sI=
 github.com/philomusica/tickets-lambda-get-concerts v1.4.1 h1:0yjcsVDrWs25JefrDtjDOkB7jCEI5EP20ez6CkRx8pQ=
 github.com/philomusica/tickets-lambda-get-concerts v1.4.1/go.mod h1:PEiYcdZIyWdCV/ZpEfiZFuLLsKfDOTgbm8eJiujukr4=
+github.com/philomusica/tickets-lambda-get-concerts v1.5.0 h1:5akIFB1meWVOFJ7bLeiR4tzOl3cMrBzZ12GSHO5kA+0=
+github.com/philomusica/tickets-lambda-get-concerts v1.5.0/go.mod h1:PEiYcdZIyWdCV/ZpEfiZFuLLsKfDOTgbm8eJiujukr4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

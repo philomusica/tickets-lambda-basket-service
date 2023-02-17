@@ -196,6 +196,16 @@ func TestProcessPaymentInsufficientTicketsAvailable(t *testing.T) {
 // HANDLER TESTS
 // ===============================================================================================================================
 
+func TestHandlerEnvironmentVariablesNotSet(t *testing.T) {
+	request := events.APIGatewayProxyRequest{}
+	response := Handler(request)
+	expectedStatusCode := 500
+	expectedBody := "Internal Server Error"
+	if response.StatusCode != expectedStatusCode || response.Body != expectedBody {
+		t.Errorf("Expected status code %d and body %s, got %d and %s\n", response.StatusCode, response.Body, expectedStatusCode, expectedBody)
+	}
+}
+
 func TestHandlerInvalidRequest(t *testing.T) {
 	request := events.APIGatewayProxyRequest{
 		Body: `{

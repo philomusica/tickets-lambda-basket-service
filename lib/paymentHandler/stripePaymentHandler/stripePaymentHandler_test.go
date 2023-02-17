@@ -1,13 +1,13 @@
 package stripePaymentHandler
 
 import (
-	"fmt"
+	//"fmt"
 	"github.com/philomusica/tickets-lambda-process-payment/lib/paymentHandler"
-	"os"
+	//"os"
 	"testing"
 )
 
-func TestMain(m *testing.M) {
+/*func TestMain(m *testing.M) {
 	rc := m.Run()
 	if rc == 0 && testing.CoverMode() != "" {
 		c := testing.Coverage()
@@ -18,7 +18,7 @@ func TestMain(m *testing.M) {
 		}
 	}
 	os.Exit(rc)
-}
+} */
 
 // ===============================================================================================================================
 // PROCESS TESTS

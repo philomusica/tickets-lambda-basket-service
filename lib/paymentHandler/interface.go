@@ -22,6 +22,8 @@ type Order struct {
 
 // PaymentRequest is a struct representing the json object passed to the lambda containing ticket and payment details
 type PaymentRequest struct {
-	OrderLines   []OrderLine `json:"orderLines"`
-	EmailAddress string      `json:"emailAddress"`
+	OrderLines []OrderLine `json:"orderLines"`
+	FirstName  string      `json:"firstName"`
+	LastName   string      `json:"lastName"`
+	Email      string      `json:"email"`
 }

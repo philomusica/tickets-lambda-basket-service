@@ -4,15 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"os"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler"
 	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler/ddbHandler"
+	"github.com/philomusica/tickets-lambda-process-payment/lib/emailHandler"
+	"github.com/philomusica/tickets-lambda-process-payment/lib/emailHandler/sesEmailHandler"
 	"github.com/philomusica/tickets-lambda-process-payment/lib/paymentHandler"
 	"github.com/philomusica/tickets-lambda-process-payment/lib/paymentHandler/stripePaymentHandler"
-	"os"
 )
 
 // ===============================================================================================================================
@@ -68,7 +72,7 @@ func parseRequestBody(request string, payReq *paymentHandler.PaymentRequest) (er
 }
 
 // processPayment is the main function, taking the AWS events.APIGatewayProxyRequest struct, a DatabaseHandler and PaymentHandler (both interfaces) and response an AWS events.APIGatewayProxyResponse struct
-func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHandler.DatabaseHandler, payHandler paymentHandler.PaymentHandler) (response events.APIGatewayProxyResponse) {
+func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHandler.DatabaseHandler, payHandler paymentHandler.PaymentHandler, emailHandler emailHandler.EmailHandler) (response events.APIGatewayProxyResponse) {
 	var payReq paymentHandler.PaymentRequest
 	err := parseRequestBody(request.Body, &payReq)
 	if err != nil {
@@ -90,7 +94,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 			return
 		}
 
-		ticketTotal := *ol.NumOfFullPrice + *ol.NumOfConcessions
+		ticketTotal := uint16(*ol.NumOfFullPrice + *ol.NumOfConcessions)
 		if concert.AvailableTickets < ticketTotal {
 			err = ErrInsufficientAvailableTickets{Message: fmt.Sprintf("Insufficient tickets available for %s\n", concert.Description)}
 			fmt.Println(err)
@@ -102,6 +106,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 		balance += float32(*ol.NumOfFullPrice)*concert.FullPrice + float32(*ol.NumOfConcessions)*concert.ConcessionPrice
 	}
 
+	// TODO Implement Process function
 	err = payHandler.Process(payReq, balance)
 	if err != nil {
 		fmt.Println(err)
@@ -110,6 +115,36 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 		return
 	}
 
+	for _, ol := range payReq.OrderLines {
+		fmt.Println(ol)
+		// Update concert table with number of sold tickets
+		err := dbHandler.UpdateTicketsSoldInTable(ol.ConcertId, uint16(*ol.NumOfFullPrice+*ol.NumOfConcessions))
+		if err != nil {
+			fmt.Println(err)
+			response.StatusCode = 400
+			response.Body = "Payment Failed. Please try again later"
+			return
+		}
+
+		// Create Order struct
+		order := paymentHandler.Order{
+			ConcertId: ol.ConcertId,
+			FirstName: payReq.FirstName,
+			LastName: payReq.LastName,
+			Email: payReq.Email,
+			NumOfFullPrice:   *ol.NumOfFullPrice,
+			NumOfConcessions: *ol.NumOfConcessions,
+		}
+		fmt.Println(order)
+
+		// Add order to orders table
+
+		// Generate QR code
+
+		// Generate PDF tickets (injecting QR code)
+
+		// Email user with PDF attached
+	}
 	return
 }
 
@@ -125,18 +160,21 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 func Handler(request events.APIGatewayProxyRequest) (response events.APIGatewayProxyResponse) {
 
 	sess := session.New()
-	svc := dynamodb.New(sess)
+	ddbsvc := dynamodb.New(sess)
+	sessvc := sesv2.New(sess)
 	concertsTable := os.Getenv("CONCERTS_TABLE")
 	ordersTable := os.Getenv("ORDERS_TABLE")
 	if concertsTable == "" || ordersTable == "" {
 		fmt.Println("CONCERT_TABLE and/or ORDERS_TABLE environment variables not set")
 		response.StatusCode = 500
+		response.Body = "Internal Server Error"
 		return
 	}
-	dynamoHandler := ddbHandler.New(svc, concertsTable, ordersTable)
+	dynamoHandler := ddbHandler.New(ddbsvc, concertsTable, ordersTable)
 	stripeHandler := stripePaymentHandler.New()
+	sesHandler := sesEmailHandler.New(sessvc)
 
-	return processPayment(request, dynamoHandler, stripeHandler)
+	return processPayment(request, dynamoHandler, stripeHandler, sesHandler)
 
 }
 
