@@ -97,7 +97,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 
 		ticketTotal := uint16(*ol.NumOfFullPrice + *ol.NumOfConcessions)
 		if concert.AvailableTickets < ticketTotal {
-			err = ErrInsufficientAvailableTickets{Message: fmt.Sprintf("Insufficient tickets available for %s\n", concert.Description)}
+			err = ErrInsufficientAvailableTickets{Message: fmt.Sprintf("Insufficient tickets available for %s\n", concert.Title)}
 			fmt.Println(err)
 			response.StatusCode = 403
 			response.Body = err.Error()

@@ -45,7 +45,7 @@ func addDetailToPDF(pdf *gopdf.GoPdf, key string, value string) {
 }
 
 // buildAdmitString takes an order struct and returns a formatted string indicating how many people to admit (e.g. "2 adults and 1 concession")
-func buildAdmitString(order paymentHandler.Order) (AdmitString string) {
+func buildAdmitString(order paymentHandler.Order) string {
 	var admitString strings.Builder
 	if order.NumOfFullPrice > 0 {
 		admitString.WriteString(fmt.Sprintf("%d ", order.NumOfFullPrice))
@@ -64,14 +64,14 @@ func buildAdmitString(order paymentHandler.Order) (AdmitString string) {
 		}
 		admitString.WriteString(fmt.Sprintf("%d ", order.NumOfConcessions))
 		var ticketType string
-		if order.NumOfFullPrice == 1 {
+		if order.NumOfConcessions == 1 {
 			ticketType = "concession"
 		} else {
 			ticketType = "concessions"
 		}
 		admitString.WriteString(ticketType)
 	}
-	return
+	return admitString.String()
 }
 
 // ===============================================================================================================================
@@ -100,15 +100,14 @@ func (s SESEmailHandler) GenerateTicketPDF(order paymentHandler.Order, concert d
 		pdf.Cell(nil, "PHILOMUSICA PRESENTS:")
 		pdf.SetXY(marginSize, marginSize+25.0)
 		pdf.SetFont("nunito-bold", "", 20)
-		pdf.Cell(nil, strings.ToUpper(concert.Description))
+		pdf.Cell(nil, strings.ToUpper(concert.Title))
 	})
 
 	// Add one page
 	pdf.AddPage()
 
 	pdf.SetY(pdf.GetY() + 30.0)
-	// TODO: Change Description to location
-	addDetailToPDF(&pdf, "Location", concert.Description)
+	addDetailToPDF(&pdf, "Location", concert.Location)
 
 	if includeQRCode && redeemTicketURL != "" {
 		var qrcodeImage []byte
