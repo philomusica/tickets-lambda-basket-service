@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler"
-	"github.com/philomusica/tickets-lambda-process-payment/lib/paymentHandler"
 	"os"
 	"testing"
+
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler"
+	"github.com/philomusica/tickets-lambda-process-payment/lib/emailHandler"
+	"github.com/philomusica/tickets-lambda-process-payment/lib/paymentHandler"
 )
 
 func TestMain(m *testing.M) {
@@ -127,6 +129,10 @@ func (m mockStripeHandlerEmpty) Process(payReq paymentHandler.PaymentRequest, ba
 	return
 }
 
+type mockEmailHandlerEmpty struct {
+	emailHandler.EmailHandler
+}
+
 func TestProcessPaymentConcertInPast(t *testing.T) {
 
 	request := events.APIGatewayProxyRequest{
@@ -143,7 +149,8 @@ func TestProcessPaymentConcertInPast(t *testing.T) {
 
 	mockDyanmoHanlder := mockDDBHandlerConcertInPast{}
 	mockStripeHandler := mockStripeHandlerEmpty{}
-	response := processPayment(request, mockDyanmoHanlder, mockStripeHandler)
+	mockEmailHandler := mockEmailHandlerEmpty{}
+	response := processPayment(request, mockDyanmoHanlder, mockStripeHandler, mockEmailHandler)
 
 	expectedStatusCode := 400
 	concertInPastErrMesage := "Error concert x in the past, tickets are no longer avaiable"
@@ -179,7 +186,8 @@ func TestProcessPaymentInsufficientTicketsAvailable(t *testing.T) {
 
 	mockDynamoHandler := mockDDBHandlerInsufficientTickets{}
 	mockStripeHandler := mockStripeHandlerEmpty{}
-	response := processPayment(request, mockDynamoHandler, mockStripeHandler)
+	mockEmailHandler := mockEmailHandlerEmpty{}
+	response := processPayment(request, mockDynamoHandler, mockStripeHandler, mockEmailHandler)
 
 	expectedStatusCode := 403
 	expectedResponseBody := fmt.Sprintf("Insufficient tickets available for %s\n", "summer concert")
