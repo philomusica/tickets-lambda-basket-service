@@ -108,7 +108,6 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 		concerts[ol.ConcertId] = *concert
 	}
 
-	// TODO Implement Process function
 	clientSecret, err := payHandler.Process(payReq, balance)
 	if err != nil {
 		fmt.Println(err)
@@ -124,13 +123,6 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 		response.StatusCode = 500
 		response.Body = errMessage
 
-		// Update concert table with number of sold tickets
-		err := dbHandler.UpdateTicketsSoldInTable(ol.ConcertId, uint16(*ol.NumOfFullPrice+*ol.NumOfConcessions))
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
 		// Create Order struct
 		order := paymentHandler.Order{
 			ConcertId:        ol.ConcertId,
@@ -139,12 +131,20 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 			Email:            payReq.Email,
 			NumOfFullPrice:   *ol.NumOfFullPrice,
 			NumOfConcessions: *ol.NumOfConcessions,
+			Status:           "pending",
 		}
 
 		// Add order to orders table
 		err = dbHandler.CreateOrderInTable(order)
 		if err != nil {
 			fmt.Printf("Unable to create order in Orders table: %s\n", err)
+			return
+		}
+
+		// Update concert table with number of sold tickets
+		err := dbHandler.UpdateTicketsSoldInTable(ol.ConcertId, uint16(*ol.NumOfFullPrice+*ol.NumOfConcessions))
+		if err != nil {
+			fmt.Println(err)
 			return
 		}
 
