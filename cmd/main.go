@@ -109,13 +109,14 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 	}
 
 	// TODO Implement Process function
-	err = payHandler.Process(payReq, balance)
+	clientSecret, err := payHandler.Process(payReq, balance)
 	if err != nil {
 		fmt.Println(err)
 		response.StatusCode = 400
 		response.Body = "Payment Failed. Please try again later"
 		return
 	}
+	fmt.Println(clientSecret)
 
 	for _, ol := range payReq.OrderLines {
 		// Set default error message
@@ -193,19 +194,16 @@ func Handler(request events.APIGatewayProxyRequest) (response events.APIGatewayP
 	sessvc := sesv2.New(sess)
 	concertsTable := os.Getenv("CONCERTS_TABLE")
 	ordersTable := os.Getenv("ORDERS_TABLE")
-	if concertsTable == "" || ordersTable == "" {
-		fmt.Println("CONCERT_TABLE and/or ORDERS_TABLE environment variables not set")
+	senderAddress := os.Getenv("SENDER_ADDRESS")
+	stripeSecret := os.Getenv("STRIPE_SECRET")
+
+	if concertsTable == "" || ordersTable == "" || senderAddress == "" || stripeSecret == "" {
+		fmt.Println("CONCERTS_TABLE ORDERS_TABLE SENDER_ADDRESS and STRIPE_SECRET all need to be set as environment variables")
 		return
 	}
 	dynamoHandler := ddbHandler.New(ddbsvc, concertsTable, ordersTable)
-	stripeHandler := stripePaymentHandler.New()
-
-	senderAddress := os.Getenv("SENDER_ADDRESS")
-	if senderAddress == "" {
-		fmt.Println("SENDER_ADDRESS env var not set")
-		return
-	}
 	sesHandler := sesEmailHandler.New(sessvc, senderAddress)
+	stripeHandler := stripePaymentHandler.New(stripeSecret)
 
 	return processPayment(request, dynamoHandler, stripeHandler, sesHandler)
 

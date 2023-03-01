@@ -25,7 +25,8 @@ else
 endif
 
 test:
-	go test -v -cover ./...
+	#go test -v -cover ./...
+	go test -cover ./...
 
 cover:
 	mkdir -p $(REPORT)

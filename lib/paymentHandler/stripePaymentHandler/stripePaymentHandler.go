@@ -1,14 +1,19 @@
 package stripePaymentHandler
 
 import (
+	"fmt"
 	"github.com/philomusica/tickets-lambda-process-payment/lib/paymentHandler"
+	"github.com/stripe/stripe-go/v74"
+	"github.com/stripe/stripe-go/v74/paymentintent"
 )
 
 // ===============================================================================================================================
 // TYPE DEFINITIONS
 // ===============================================================================================================================
 
-type StripePaymentHandler struct{}
+type StripePaymentHandler struct {
+	stripeSecret string
+}
 
 // ===============================================================================================================================
 // END TYPE DEFINITIONS
@@ -18,12 +23,29 @@ type StripePaymentHandler struct{}
 // PUBLIC FUNCTIONS
 // ===============================================================================================================================
 
-func New() (sph *StripePaymentHandler) {
-	return &StripePaymentHandler{}
+func New(stripeSecret string) (sph *StripePaymentHandler) {
+	return &StripePaymentHandler{
+		stripeSecret,
+	}
 }
 
-func (s StripePaymentHandler) Process(payReq paymentHandler.PaymentRequest, balance float32) (err error) {
-	err = paymentHandler.ErrPaymentFailed{}
+func (s StripePaymentHandler) Process(payReq paymentHandler.PaymentRequest, balance float32) (clientSecret string, err error) {
+	stripe.Key = s.stripeSecret
+	params := &stripe.PaymentIntentParams{
+
+		Amount:   stripe.Int64(int64(balance * 100)),
+		Currency: stripe.String(string(stripe.CurrencyGBP)),
+		AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
+			Enabled: stripe.Bool(true),
+		},
+	}
+
+	intent, err := paymentintent.New(params)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	clientSecret = intent.ClientSecret
 	return
 }
 

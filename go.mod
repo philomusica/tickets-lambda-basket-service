@@ -1,13 +1,14 @@
 module github.com/philomusica/tickets-lambda-process-payment
 
-go 1.18
+go 1.20
 
 require (
 	github.com/aws/aws-lambda-go v1.37.0
-	github.com/aws/aws-sdk-go v1.44.203
+	github.com/aws/aws-sdk-go v1.44.212
 	github.com/philomusica/tickets-lambda-get-concerts v1.6.0
 	github.com/signintech/gopdf v0.16.1
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
+	github.com/stripe/stripe-go/v74 v74.9.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
 

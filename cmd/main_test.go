@@ -126,11 +126,11 @@ func (m mockDDBHandlerConcertInPast) GetConcertFromTable(concertID string) (conc
 
 type mockStripeHandlerEmpty struct{}
 
-func (m mockStripeHandlerEmpty) Process(payReq paymentHandler.PaymentRequest, balance float32) (err error) {
+func (m mockStripeHandlerEmpty) Process(payReq paymentHandler.PaymentRequest, balance float32) (clientSecret string, err error) {
 	return
 }
 
-type mockEmailHandlerEmpty struct {
+type mockEmailHandler struct {
 	emailHandler.EmailHandler
 }
 
@@ -150,7 +150,7 @@ func TestProcessPaymentConcertInPast(t *testing.T) {
 
 	mockDyanmoHanlder := mockDDBHandlerConcertInPast{}
 	mockStripeHandler := mockStripeHandlerEmpty{}
-	mockEmailHandler := mockEmailHandlerEmpty{}
+	mockEmailHandler := mockEmailHandler{}
 	response := processPayment(request, mockDyanmoHanlder, mockStripeHandler, mockEmailHandler)
 
 	expectedStatusCode := 400
@@ -187,7 +187,7 @@ func TestProcessPaymentInsufficientTicketsAvailable(t *testing.T) {
 
 	mockDynamoHandler := mockDDBHandlerInsufficientTickets{}
 	mockStripeHandler := mockStripeHandlerEmpty{}
-	mockEmailHandler := mockEmailHandlerEmpty{}
+	mockEmailHandler := mockEmailHandler{}
 	response := processPayment(request, mockDynamoHandler, mockStripeHandler, mockEmailHandler)
 
 	expectedStatusCode := 403
@@ -228,6 +228,7 @@ func TestHandlerInvalidRequest(t *testing.T) {
 	}
 	t.Setenv("CONCERTS_TABLE", "concerts-table")
 	t.Setenv("ORDERS_TABLE", "orders-table")
+	t.Setenv("STRIPE_SECRET", "stripe-secret")
 
 	response := Handler(request)
 	expectedStatusCode := 500
