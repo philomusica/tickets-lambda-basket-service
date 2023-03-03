@@ -29,7 +29,7 @@ func New(stripeSecret string) (sph *StripePaymentHandler) {
 	}
 }
 
-func (s StripePaymentHandler) Process(payReq paymentHandler.PaymentRequest, balance float32) (clientSecret string, err error) {
+func (s StripePaymentHandler) Process(payReq paymentHandler.PaymentRequest, balance float32, reference string) (clientSecret string, err error) {
 	stripe.Key = s.stripeSecret
 	params := &stripe.PaymentIntentParams{
 
@@ -39,6 +39,7 @@ func (s StripePaymentHandler) Process(payReq paymentHandler.PaymentRequest, bala
 			Enabled: stripe.Bool(true),
 		},
 	}
+	params.AddMetadata("order_reference", reference)
 
 	intent, err := paymentintent.New(params)
 	if err != nil {

@@ -30,7 +30,7 @@ func TestStripePaymentHandlerFails(t *testing.T) {
 
 	payReq := paymentHandler.PaymentRequest{}
 	var balance float32 = 40.0
-	_, err := stripeHandler.Process(payReq, balance)
+	_, err := stripeHandler.Process(payReq, balance, "A1B2")
 	expectedErr, ok := err.(*stripe.Error)
 
 	if !ok {

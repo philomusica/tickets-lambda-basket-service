@@ -108,23 +108,16 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 		concerts[ol.ConcertId] = *concert
 	}
 
-	clientSecret, err := payHandler.Process(payReq, balance)
-	if err != nil {
-		fmt.Println(err)
-		response.StatusCode = 400
-		response.Body = "Payment Failed. Please try again later"
-		return
-	}
-	fmt.Println(clientSecret)
-
+	reference := dbHandler.GenerateOrderReference(4)
 	for _, ol := range payReq.OrderLines {
 		// Set default error message
-		errMessage := "Payment was successful but we were unable to send a confirmation email with your tickets. Please contact us at https://philomusica.org.uk/contact"
+		errMessage := "Internal Server Error"
 		response.StatusCode = 500
 		response.Body = errMessage
 
 		// Create Order struct
 		order := paymentHandler.Order{
+			Reference:        reference,
 			ConcertId:        ol.ConcertId,
 			FirstName:        payReq.FirstName,
 			LastName:         payReq.LastName,
@@ -140,35 +133,19 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 			fmt.Printf("Unable to create order in Orders table: %s\n", err)
 			return
 		}
-
-		// Update concert table with number of sold tickets
-		err := dbHandler.UpdateTicketsSoldInTable(ol.ConcertId, uint16(*ol.NumOfFullPrice+*ol.NumOfConcessions))
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		// Generate QR code
-		redeemTicketURL := os.Getenv("REDEEM_TICKET_API")
-		if redeemTicketURL == "" {
-			fmt.Printf("redeemTicketURL not set\n")
-			return
-		}
-
-		// Generate PDF tickets (injecting QR code)
-		attachment := emailHandler.GenerateTicketPDF(order, concerts[order.ConcertId], true, redeemTicketURL)
-		if err != nil {
-			fmt.Printf("Unable to generate QR code: %s\n", err)
-			return
-		}
-
-		// Email user with PDF attached
-		err = emailHandler.SendEmail(order, attachment)
-		if err != nil {
-			fmt.Printf("Unable to send email: %s\n", err)
-			return
-		}
 	}
+
+	clientSecret, err := payHandler.Process(payReq, balance, reference)
+	if err != nil {
+		fmt.Println(err)
+		response.StatusCode = 400
+		response.Body = "Payment Failed. Please try again later"
+		return
+	}
+
+	jsonResponse, _ := json.Marshal(&struct{ clientSecret string }{clientSecret})
+	response.StatusCode = 200
+	response.Body = string(jsonResponse)
 	return
 }
 

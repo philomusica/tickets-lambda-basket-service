@@ -126,7 +126,7 @@ func (m mockDDBHandlerConcertInPast) GetConcertFromTable(concertID string) (conc
 
 type mockStripeHandlerEmpty struct{}
 
-func (m mockStripeHandlerEmpty) Process(payReq paymentHandler.PaymentRequest, balance float32) (clientSecret string, err error) {
+func (m mockStripeHandlerEmpty) Process(payReq paymentHandler.PaymentRequest, balance float32, reference string) (clientSecret string, err error) {
 	return
 }
 
