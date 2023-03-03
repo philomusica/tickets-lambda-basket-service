@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler"
-	"github.com/philomusica/tickets-lambda-basket-service/lib/emailHandler"
+	"github.com/philomusica/tickets-lambda-post-payment/lib/emailHandler"
 	"github.com/philomusica/tickets-lambda-basket-service/lib/paymentHandler"
 )
 
