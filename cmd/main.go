@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler"
-	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler/ddbHandler"
 	"github.com/philomusica/tickets-lambda-basket-service/lib/paymentHandler"
 	"github.com/philomusica/tickets-lambda-basket-service/lib/paymentHandler/stripePaymentHandler"
+	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler"
+	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler/ddbHandler"
 )
 
 // ===============================================================================================================================
@@ -132,7 +132,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 		}
 	}
 
-	clientSecret, err := payHandler.Process(payReq, balance, reference)
+	clientSecret, err := payHandler.Process(balance, reference)
 	if err != nil {
 		fmt.Println(err)
 		response.StatusCode = 400

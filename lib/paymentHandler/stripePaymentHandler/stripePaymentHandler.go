@@ -2,7 +2,6 @@ package stripePaymentHandler
 
 import (
 	"fmt"
-	"github.com/philomusica/tickets-lambda-basket-service/lib/paymentHandler"
 	"github.com/stripe/stripe-go/v74"
 	"github.com/stripe/stripe-go/v74/paymentintent"
 )
@@ -29,7 +28,7 @@ func New(stripeSecret string) (sph *StripePaymentHandler) {
 	}
 }
 
-func (s StripePaymentHandler) Process(payReq paymentHandler.PaymentRequest, balance float32, reference string) (clientSecret string, err error) {
+func (s StripePaymentHandler) Process(balance float32, reference string) (clientSecret string, err error) {
 	stripe.Key = s.stripeSecret
 	params := &stripe.PaymentIntentParams{
 

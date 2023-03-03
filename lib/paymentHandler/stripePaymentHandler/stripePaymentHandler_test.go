@@ -2,7 +2,6 @@ package stripePaymentHandler
 
 import (
 	//"fmt"
-	"github.com/philomusica/tickets-lambda-basket-service/lib/paymentHandler"
 	"github.com/stripe/stripe-go/v74"
 	//"os"
 	"testing"
@@ -28,9 +27,8 @@ import (
 func TestStripePaymentHandlerFails(t *testing.T) {
 	stripeHandler := New("stripe-secret")
 
-	payReq := paymentHandler.PaymentRequest{}
 	var balance float32 = 40.0
-	_, err := stripeHandler.Process(payReq, balance, "A1B2")
+	_, err := stripeHandler.Process(balance, "A1B2")
 	expectedErr, ok := err.(*stripe.Error)
 
 	if !ok {

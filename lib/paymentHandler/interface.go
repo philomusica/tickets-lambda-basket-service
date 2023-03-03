@@ -1,7 +1,7 @@
 package paymentHandler
 
 type PaymentHandler interface {
-	Process(payReq PaymentRequest, balance float32, reference string) (clientSecret string, err error)
+	Process(balance float32, reference string) (clientSecret string, err error)
 }
 
 type OrderLine struct {

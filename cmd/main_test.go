@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/philomusica/tickets-lambda-basket-service/lib/paymentHandler"
 	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler"
 	"github.com/philomusica/tickets-lambda-post-payment/lib/emailHandler"
-	"github.com/philomusica/tickets-lambda-basket-service/lib/paymentHandler"
 )
 
 /*
@@ -126,7 +126,7 @@ func (m mockDDBHandlerConcertInPast) GetConcertFromTable(concertID string) (conc
 
 type mockStripeHandlerEmpty struct{}
 
-func (m mockStripeHandlerEmpty) Process(payReq paymentHandler.PaymentRequest, balance float32, reference string) (clientSecret string, err error) {
+func (m mockStripeHandlerEmpty) Process(balance float32, reference string) (clientSecret string, err error) {
 	return
 }
 
@@ -150,8 +150,7 @@ func TestProcessPaymentConcertInPast(t *testing.T) {
 
 	mockDyanmoHanlder := mockDDBHandlerConcertInPast{}
 	mockStripeHandler := mockStripeHandlerEmpty{}
-	mockEmailHandler := mockEmailHandler{}
-	response := processPayment(request, mockDyanmoHanlder, mockStripeHandler, mockEmailHandler)
+	response := processPayment(request, mockDyanmoHanlder, mockStripeHandler)
 
 	expectedStatusCode := 400
 	concertInPastErrMesage := "Error concert x in the past, tickets are no longer avaiable"
@@ -187,8 +186,7 @@ func TestProcessPaymentInsufficientTicketsAvailable(t *testing.T) {
 
 	mockDynamoHandler := mockDDBHandlerInsufficientTickets{}
 	mockStripeHandler := mockStripeHandlerEmpty{}
-	mockEmailHandler := mockEmailHandler{}
-	response := processPayment(request, mockDynamoHandler, mockStripeHandler, mockEmailHandler)
+	response := processPayment(request, mockDynamoHandler, mockStripeHandler)
 
 	expectedStatusCode := 403
 	expectedResponseBody := fmt.Sprintf("Insufficient tickets available for %s\n", "summer concert")
@@ -228,7 +226,6 @@ func TestHandlerInvalidRequest(t *testing.T) {
 	}
 	t.Setenv("CONCERTS_TABLE", "concerts-table")
 	t.Setenv("ORDERS_TABLE", "orders-table")
-	t.Setenv("STRIPE_SECRET", "stripe-secret")
 
 	response := Handler(request)
 	expectedStatusCode := 500
