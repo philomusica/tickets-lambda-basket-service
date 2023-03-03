@@ -91,7 +91,7 @@ func TestParseRequestBodyNoConcessionPrice(t *testing.T) {
 	}
 }
 
-func TestParseRequestBodyInvalidConcertId(t *testing.T) {
+func TestParseRequestBodyInvalidConcertID(t *testing.T) {
 	request := `
 		{
 			"numOfFullPrice": 2,

@@ -59,7 +59,7 @@ func parseRequestBody(request string, payReq *paymentHandler.PaymentRequest) (er
 	}
 
 	for _, ol := range payReq.OrderLines {
-		if ol.NumOfFullPrice == nil || ol.NumOfConcessions == nil || ol.ConcertId == "" {
+		if ol.NumOfFullPrice == nil || ol.NumOfConcessions == nil || ol.ConcertID == "" {
 			err = ErrInvalidRequestBody{Message: "order line is missing requirement information"}
 			return
 		}
@@ -84,7 +84,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 
 	for _, ol := range payReq.OrderLines {
 		var concert *databaseHandler.Concert
-		concert, err = dbHandler.GetConcertFromTable(ol.ConcertId)
+		concert, err = dbHandler.GetConcertFromTable(ol.ConcertID)
 		if err != nil {
 			fmt.Println(err)
 			response.StatusCode = 400
@@ -102,7 +102,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 		}
 
 		balance += float32(*ol.NumOfFullPrice)*concert.FullPrice + float32(*ol.NumOfConcessions)*concert.ConcessionPrice
-		concerts[ol.ConcertId] = *concert
+		concerts[ol.ConcertID] = *concert
 	}
 
 	reference := dbHandler.GenerateOrderReference(4)
@@ -115,7 +115,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 		// Create Order struct
 		order := paymentHandler.Order{
 			Reference:        reference,
-			ConcertId:        ol.ConcertId,
+			ConcertID:        ol.ConcertID,
 			FirstName:        payReq.FirstName,
 			LastName:         payReq.LastName,
 			Email:            payReq.Email,
