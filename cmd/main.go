@@ -9,13 +9,10 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler"
 	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler/ddbHandler"
-	"github.com/philomusica/tickets-lambda-process-payment/lib/emailHandler"
-	"github.com/philomusica/tickets-lambda-process-payment/lib/emailHandler/sesEmailHandler"
-	"github.com/philomusica/tickets-lambda-process-payment/lib/paymentHandler"
-	"github.com/philomusica/tickets-lambda-process-payment/lib/paymentHandler/stripePaymentHandler"
+	"github.com/philomusica/tickets-lambda-basket-service/lib/paymentHandler"
+	"github.com/philomusica/tickets-lambda-basket-service/lib/paymentHandler/stripePaymentHandler"
 )
 
 // ===============================================================================================================================
@@ -71,7 +68,7 @@ func parseRequestBody(request string, payReq *paymentHandler.PaymentRequest) (er
 }
 
 // processPayment is the main function, taking the AWS events.APIGatewayProxyRequest struct, a DatabaseHandler and PaymentHandler (both interfaces) and response an AWS events.APIGatewayProxyResponse struct
-func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHandler.DatabaseHandler, payHandler paymentHandler.PaymentHandler, emailHandler emailHandler.EmailHandler) (response events.APIGatewayProxyResponse) {
+func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHandler.DatabaseHandler, payHandler paymentHandler.PaymentHandler) (response events.APIGatewayProxyResponse) {
 	var payReq paymentHandler.PaymentRequest
 	err := parseRequestBody(request.Body, &payReq)
 	if err != nil {
@@ -168,21 +165,18 @@ func Handler(request events.APIGatewayProxyRequest) (response events.APIGatewayP
 		return
 	}
 	ddbsvc := dynamodb.New(sess)
-	sessvc := sesv2.New(sess)
 	concertsTable := os.Getenv("CONCERTS_TABLE")
 	ordersTable := os.Getenv("ORDERS_TABLE")
-	senderAddress := os.Getenv("SENDER_ADDRESS")
 	stripeSecret := os.Getenv("STRIPE_SECRET")
 
-	if concertsTable == "" || ordersTable == "" || senderAddress == "" || stripeSecret == "" {
-		fmt.Println("CONCERTS_TABLE ORDERS_TABLE SENDER_ADDRESS and STRIPE_SECRET all need to be set as environment variables")
+	if concertsTable == "" || ordersTable == "" || stripeSecret == "" {
+		fmt.Println("CONCERTS_TABLE ORDERS_TABLE and STRIPE_SECRET all need to be set as environment variables")
 		return
 	}
 	dynamoHandler := ddbHandler.New(ddbsvc, concertsTable, ordersTable)
-	sesHandler := sesEmailHandler.New(sessvc, senderAddress)
 	stripeHandler := stripePaymentHandler.New(stripeSecret)
 
-	return processPayment(request, dynamoHandler, stripeHandler, sesHandler)
+	return processPayment(request, dynamoHandler, stripeHandler)
 
 }
 

@@ -1,5 +1,5 @@
-# tickets-lambda-process-payment
-A lambda function responsible for taking purchase details from frontend form and processing the payment and ticket sale
+# tickets-lambda-basket-service
+A lambda function responsible for taking purchase details from frontend form, checking stock, calcuating the balance and starting the payment process
 
 ## Install dependencies
 ```

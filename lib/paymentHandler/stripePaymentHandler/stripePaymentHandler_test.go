@@ -2,7 +2,7 @@ package stripePaymentHandler
 
 import (
 	//"fmt"
-	"github.com/philomusica/tickets-lambda-process-payment/lib/paymentHandler"
+	"github.com/philomusica/tickets-lambda-basket-service/lib/paymentHandler"
 	"github.com/stripe/stripe-go/v74"
 	//"os"
 	"testing"

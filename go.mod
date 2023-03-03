@@ -1,4 +1,4 @@
-module github.com/philomusica/tickets-lambda-process-payment
+module github.com/philomusica/tickets-lambda-basket-service
 
 go 1.20
 
