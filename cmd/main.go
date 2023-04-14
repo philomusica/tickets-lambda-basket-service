@@ -69,6 +69,7 @@ func parseRequestBody(request string, payReq *paymentHandler.PaymentRequest) (er
 
 // processPayment is the main function, taking the AWS events.APIGatewayProxyRequest struct, a DatabaseHandler and PaymentHandler (both interfaces) and response an AWS events.APIGatewayProxyResponse struct
 func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHandler.DatabaseHandler, payHandler paymentHandler.PaymentHandler) (response events.APIGatewayProxyResponse) {
+	response.Headers = map[string]string{"Access-Control-Allow-Origin": "*"}
 	var payReq paymentHandler.PaymentRequest
 	err := parseRequestBody(request.Body, &payReq)
 	if err != nil {
@@ -158,6 +159,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 func Handler(request events.APIGatewayProxyRequest) (response events.APIGatewayProxyResponse) {
 	response.StatusCode = 500
 	response.Body = "Internal Server Error"
+	response.Headers = map[string]string{"Access-Control-Allow-Origin": "*"}
 
 	sess, err := session.NewSession()
 	if err != nil {
