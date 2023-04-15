@@ -205,9 +205,9 @@ func TestProcessPaymentInsufficientTicketsAvailable(t *testing.T) {
 
 func TestHandlerEnvironmentVariablesNotSet(t *testing.T) {
 	request := events.APIGatewayProxyRequest{}
-	response := Handler(request)
+	response, _ := Handler(request)
 	expectedStatusCode := 500
-	expectedBody := "Internal Server Error"
+	expectedBody := DEFAULT_JSON_RESPONSE
 	if response.StatusCode != expectedStatusCode || response.Body != expectedBody {
 		t.Errorf("Expected status code %d and body %s, got %d and %s\n", response.StatusCode, response.Body, expectedStatusCode, expectedBody)
 	}
@@ -227,9 +227,9 @@ func TestHandlerInvalidRequest(t *testing.T) {
 	t.Setenv("CONCERTS_TABLE", "concerts-table")
 	t.Setenv("ORDERS_TABLE", "orders-table")
 
-	response := Handler(request)
+	response, _ := Handler(request)
 	expectedStatusCode := 500
-	expectedResponseBody := "Internal Server Error"
+	expectedResponseBody := DEFAULT_JSON_RESPONSE
 	if response.StatusCode != expectedStatusCode || response.Body != expectedResponseBody {
 		t.Errorf("Expected statusCode %d and Body %s, got %d and %s", expectedStatusCode, expectedResponseBody, response.StatusCode, response.Body)
 	}

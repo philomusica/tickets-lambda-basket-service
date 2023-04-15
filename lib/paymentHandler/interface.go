@@ -5,14 +5,14 @@ type PaymentHandler interface {
 }
 
 type OrderLine struct {
-	ConcertID        string `json:"concertId"`
+	ConcertID        string `json:"concertID"`
 	NumOfFullPrice   *uint8 `json:"numOfFullPrice"`
 	NumOfConcessions *uint8 `json:"numOfConcessions"`
 }
 
 type Order struct {
-	ConcertID        string `json:"concertId"`
-	Reference        string `json:"reference"`
+	ConcertID        string `json:"concertID"`
+	OrderReference   string `json:"orderReference"`
 	FirstName        string `json:"firstName"`
 	LastName         string `json:"lastName"`
 	Email            string `json:"email"`

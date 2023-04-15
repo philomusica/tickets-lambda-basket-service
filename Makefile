@@ -16,7 +16,7 @@ deps:
 clean:
 	rm -rf $(BINDIR)
 
-deploy: build
+deploy: $(BINARY)
 ifeq ($(ARN),)
 	@echo "Please set the ARN"
 else
@@ -25,8 +25,8 @@ else
 endif
 
 test:
-	#go test -v -cover ./...
-	go test -cover ./...
+	go test -v -cover ./...
+	#go test -cover ./...
 
 cover:
 	mkdir -p $(REPORT)

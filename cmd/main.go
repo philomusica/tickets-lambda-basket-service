@@ -15,6 +15,8 @@ import (
 	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler/ddbHandler"
 )
 
+const DEFAULT_JSON_RESPONSE string = `{"error": "payment failed"}`
+
 // ===============================================================================================================================
 // TYPE DEFINITIONS
 // ===============================================================================================================================
@@ -93,6 +95,14 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 			return
 		}
 
+		err = dbHandler.ReformatDateTimeAndTickets(concert)
+		if err != nil {
+			fmt.Println(err)
+			response.StatusCode = 400
+			response.Body = err.Error()
+			return
+		}
+
 		ticketTotal := uint16(*ol.NumOfFullPrice + *ol.NumOfConcessions)
 		if concert.AvailableTickets < ticketTotal {
 			err = ErrInsufficientAvailableTickets{Message: fmt.Sprintf("Insufficient tickets available for %s\n", concert.Title)}
@@ -106,7 +116,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 		concerts[ol.ConcertID] = *concert
 	}
 
-	reference := dbHandler.GenerateOrderReference(4)
+	orderReference := dbHandler.GenerateOrderReference(4)
 	for _, ol := range payReq.OrderLines {
 		// Set default error message
 		errMessage := "Internal Server Error"
@@ -115,7 +125,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 
 		// Create Order struct
 		order := paymentHandler.Order{
-			Reference:        reference,
+			OrderReference:   orderReference,
 			ConcertID:        ol.ConcertID,
 			FirstName:        payReq.FirstName,
 			LastName:         payReq.LastName,
@@ -133,7 +143,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 		}
 	}
 
-	clientSecret, err := payHandler.Process(balance, reference)
+	clientSecret, err := payHandler.Process(balance, orderReference)
 	if err != nil {
 		fmt.Println(err)
 		response.StatusCode = 400
@@ -141,7 +151,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 		return
 	}
 
-	jsonResponse, _ := json.Marshal(&struct{ clientSecret string }{clientSecret})
+	jsonResponse, _ := json.Marshal(struct{ ClientSecret string `json:"clientSecret"` }{clientSecret})
 	response.StatusCode = 200
 	response.Body = string(jsonResponse)
 	return
@@ -156,15 +166,17 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 // ===============================================================================================================================
 
 // Handler function is the entry point for the lambda function
-func Handler(request events.APIGatewayProxyRequest) (response events.APIGatewayProxyResponse) {
-	response.StatusCode = 500
-	response.Body = "Internal Server Error"
-	response.Headers = map[string]string{"Access-Control-Allow-Origin": "*"}
+func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	response := events.APIGatewayProxyResponse{
+		Body:       DEFAULT_JSON_RESPONSE,
+		StatusCode: 500,
+		Headers:    map[string]string{"Access-Control-Allow-Origin": "*"},
+	}
 
 	sess, err := session.NewSession()
 	if err != nil {
 		fmt.Println(err)
-		return
+		return response, nil
 	}
 	ddbsvc := dynamodb.New(sess)
 	concertsTable := os.Getenv("CONCERTS_TABLE")
@@ -173,12 +185,12 @@ func Handler(request events.APIGatewayProxyRequest) (response events.APIGatewayP
 
 	if concertsTable == "" || ordersTable == "" || stripeSecret == "" {
 		fmt.Println("CONCERTS_TABLE ORDERS_TABLE and STRIPE_SECRET all need to be set as environment variables")
-		return
+		return response, nil
 	}
 	dynamoHandler := ddbHandler.New(ddbsvc, concertsTable, ordersTable)
 	stripeHandler := stripePaymentHandler.New(stripeSecret)
 
-	return processPayment(request, dynamoHandler, stripeHandler)
+	return processPayment(request, dynamoHandler, stripeHandler), nil
 
 }
 
