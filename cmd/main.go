@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -82,6 +83,25 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 	}
 
 	var balance float32 = 0.0
+	var tmpValue float64
+	transactionFeePercentageStr := os.Getenv("TRANSACTION_FEE_PERCENTAGE")
+	transactionFeeFlatRateStr := os.Getenv("TRANSACTION_FEE_FLAT_RATE")
+
+	var transactionFeePercentage, transactionFeeFlatRate float32 = 0.0, 0.0
+
+	if transactionFeePercentageStr != "" {
+		tmpValue, err = strconv.ParseFloat(transactionFeePercentageStr, 32)
+		transactionFeePercentage = float32(tmpValue)
+	}
+	if transactionFeeFlatRateStr != "" {
+		tmpValue, err = strconv.ParseFloat(transactionFeeFlatRateStr, 32)
+		transactionFeePercentage = float32(tmpValue)
+	}
+
+	if err != nil {
+		fmt.Println("Issue parsing transaction fee amounts", err)
+		return
+	}
 
 	concerts := make(map[string]databaseHandler.Concert)
 
@@ -115,6 +135,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 		balance += float32(*ol.NumOfFullPrice)*concert.FullPrice + float32(*ol.NumOfConcessions)*concert.ConcessionPrice
 		concerts[ol.ConcertID] = *concert
 	}
+	balance = balance*(transactionFeePercentage / 100 + 1) + transactionFeeFlatRate
 
 	orderReference := dbHandler.GenerateOrderReference(4)
 	for _, ol := range payReq.OrderLines {
