@@ -18,7 +18,7 @@ type Order struct {
 	Email            string `json:"email"`
 	NumOfFullPrice   uint8  `json:"numOfFullPrice"`
 	NumOfConcessions uint8  `json:"numOfConcessions"`
-	Status           string `json:"status"`
+	OrderStatus      string `json:"orderStatus"`
 }
 
 // PaymentRequest is a struct representing the json object passed to the lambda containing ticket and payment details

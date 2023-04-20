@@ -135,7 +135,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 		balance += float32(*ol.NumOfFullPrice)*concert.FullPrice + float32(*ol.NumOfConcessions)*concert.ConcessionPrice
 		concerts[ol.ConcertID] = *concert
 	}
-	balance = balance*(transactionFeePercentage / 100 + 1) + transactionFeeFlatRate
+	balance = balance*(transactionFeePercentage/100+1) + transactionFeeFlatRate
 
 	orderReference := dbHandler.GenerateOrderReference(4)
 	for _, ol := range payReq.OrderLines {
@@ -153,7 +153,7 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 			Email:            payReq.Email,
 			NumOfFullPrice:   *ol.NumOfFullPrice,
 			NumOfConcessions: *ol.NumOfConcessions,
-			Status:           "pending",
+			OrderStatus:           "pending",
 		}
 
 		// Add order to orders table
@@ -172,7 +172,9 @@ func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHan
 		return
 	}
 
-	jsonResponse, _ := json.Marshal(struct{ ClientSecret string `json:"clientSecret"` }{clientSecret})
+	jsonResponse, _ := json.Marshal(struct {
+		ClientSecret string `json:"clientSecret"`
+	}{clientSecret})
 	response.StatusCode = 200
 	response.Body = string(jsonResponse)
 	return
