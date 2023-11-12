@@ -10,10 +10,10 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/philomusica/tickets-lambda-basket-service/lib/paymentHandler"
-	"github.com/philomusica/tickets-lambda-basket-service/lib/paymentHandler/stripePaymentHandler"
-	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler"
-	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler/ddbHandler"
+	"github.com/philomusica/tickets-lambda-utils/lib/databaseHandler"
+	"github.com/philomusica/tickets-lambda-utils/lib/databaseHandler/ddbHandler"
+	"github.com/philomusica/tickets-lambda-utils/lib/paymentHandler"
+	"github.com/philomusica/tickets-lambda-utils/lib/paymentHandler/stripePaymentHandler"
 )
 
 const DEFAULT_JSON_RESPONSE string = `{"error": "payment failed"}`
@@ -72,7 +72,7 @@ func parseRequestBody(request string, payReq *paymentHandler.PaymentRequest) (er
 
 // processPayment is the main function, taking the AWS events.APIGatewayProxyRequest struct, a DatabaseHandler and PaymentHandler (both interfaces) and response an AWS events.APIGatewayProxyResponse struct
 func processPayment(request events.APIGatewayProxyRequest, dbHandler databaseHandler.DatabaseHandler, payHandler paymentHandler.PaymentHandler) (response events.APIGatewayProxyResponse) {
-	response.Headers = map[string]string{"Access-Control-Allow-Origin": "*"}
+	response.Headers = map[string]string{"Access-Control-Allow-Origin": "https://philomusica.org.uk"}
 	var payReq paymentHandler.PaymentRequest
 	err := parseRequestBody(request.Body, &payReq)
 	if err != nil {
@@ -193,7 +193,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	response := events.APIGatewayProxyResponse{
 		Body:       DEFAULT_JSON_RESPONSE,
 		StatusCode: 500,
-		Headers:    map[string]string{"Access-Control-Allow-Origin": "*"},
+		Headers:    map[string]string{"Access-Control-Allow-Origin": "https://philomusica.org.uk"},
 	}
 
 	sess, err := session.NewSession()

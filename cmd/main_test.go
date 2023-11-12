@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/philomusica/tickets-lambda-basket-service/lib/paymentHandler"
-	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler"
-	"github.com/philomusica/tickets-lambda-post-payment/lib/emailHandler"
+	"github.com/philomusica/tickets-lambda-utils/lib/databaseHandler"
+	"github.com/philomusica/tickets-lambda-utils/lib/emailHandler"
+	"github.com/philomusica/tickets-lambda-utils/lib/paymentHandler"
 )
 
 /*
