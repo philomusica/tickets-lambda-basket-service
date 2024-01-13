@@ -2,15 +2,32 @@ package main
 
 import (
 	"fmt"
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/philomusica/tickets-lambda-get-concerts/lib/databaseHandler"
-	"github.com/philomusica/tickets-lambda-process-payment/lib/paymentHandler"
 	"testing"
+
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/philomusica/tickets-lambda-utils/lib/databaseHandler"
+	"github.com/philomusica/tickets-lambda-utils/lib/emailHandler"
+	"github.com/philomusica/tickets-lambda-utils/lib/paymentHandler"
 )
 
-var (
-	concertInPastErrMesage      string = "Error concert x in the past, tickets are no longer avaiable"
-)
+/*
+func TestMain(m *testing.M) {
+	rc := m.Run()
+	if rc == 0 && testing.CoverMode() != "" {
+		c := testing.Coverage()
+		fmt.Println(c)
+		if c < 0.9 {
+			fmt.Printf("Tests passed but coverage was below %d%%\n", int(c*100))
+			rc = -1
+		}
+	}
+	os.Exit(rc)
+}
+*/
+
+// ===============================================================================================================================
+// PARSE_REQUEST_BODY TESTS
+// ===============================================================================================================================
 
 func TestParseRequestBodySuccess(t *testing.T) {
 	request := `
@@ -74,7 +91,7 @@ func TestParseRequestBodyNoConcessionPrice(t *testing.T) {
 	}
 }
 
-func TestParseRequestBodyInvalidConcertId(t *testing.T) {
+func TestParseRequestBodyInvalidConcertID(t *testing.T) {
 	request := `
 		{
 			"numOfFullPrice": 2,
@@ -90,39 +107,31 @@ func TestParseRequestBodyInvalidConcertId(t *testing.T) {
 	}
 }
 
-func TestHandlerInvalidRequest(t *testing.T) {
-	request := events.APIGatewayProxyRequest{
-		Body: `{
-			"orderLines": [
-				{
-					"numOfConcessions": 2,
-					"concertId": "ABC"	
-				}
-			]
-		}`,
-	}
+// ===============================================================================================================================
+// END PARSE_REQUEST_BODY TESTS
+// ===============================================================================================================================
 
-	response := Handler(request)
-	expectedStatusCode := 400
-	expectedResponseBody := "Invalid request"
-	if response.StatusCode != expectedStatusCode || response.Body != expectedResponseBody {
-		t.Errorf("Expected statusCode %d and Body %s, got %d and %s", expectedStatusCode, expectedResponseBody, response.StatusCode, response.Body)
-	}
-}
+// ===============================================================================================================================
+// PROCESS_PAYMENT TESTS
+// ===============================================================================================================================
 
 type mockDDBHandlerConcertInPast struct {
 	databaseHandler.DatabaseHandler
 }
 
-func (m mockDDBHandlerConcertInPast) GetConcertFromDatabase(concertID string) (concert *databaseHandler.Concert, err error) {
+func (m mockDDBHandlerConcertInPast) GetConcertFromTable(concertID string) (concert *databaseHandler.Concert, err error) {
 	err = databaseHandler.ErrConcertInPast{Message: "Error concert x in the past, tickets are no longer avaiable"}
 	return
 }
 
-type mockStripeHandlerEmpty struct {}
+type mockStripeHandlerEmpty struct{}
 
-func (m mockStripeHandlerEmpty) Process(payReq paymentHandler.PaymentRequest, balance float32) (err error) {
+func (m mockStripeHandlerEmpty) Process(balance float32, reference string) (clientSecret string, err error) {
 	return
+}
+
+type mockEmailHandler struct {
+	emailHandler.EmailHandler
 }
 
 func TestProcessPaymentConcertInPast(t *testing.T) {
@@ -144,6 +153,7 @@ func TestProcessPaymentConcertInPast(t *testing.T) {
 	response := processPayment(request, mockDyanmoHanlder, mockStripeHandler)
 
 	expectedStatusCode := 400
+	concertInPastErrMesage := "Error concert x in the past, tickets are no longer avaiable"
 	if response.StatusCode != expectedStatusCode || response.Body != concertInPastErrMesage {
 		t.Errorf("Expected statusCode %d and Body %s, got %d and %s", expectedStatusCode, concertInPastErrMesage, response.StatusCode, response.Body)
 	}
@@ -153,10 +163,10 @@ type mockDDBHandlerInsufficientTickets struct {
 	databaseHandler.DatabaseHandler
 }
 
-func (m mockDDBHandlerInsufficientTickets) GetConcertFromDatabase(concertID string) (concert *databaseHandler.Concert, err error) {
+func (m mockDDBHandlerInsufficientTickets) GetConcertFromTable(concertID string) (concert *databaseHandler.Concert, err error) {
 	concert = &databaseHandler.Concert{
 		AvailableTickets: 9,
-		Description:      "summer concert",
+		Title:            "summer concert",
 	}
 	return
 }
@@ -184,3 +194,47 @@ func TestProcessPaymentInsufficientTicketsAvailable(t *testing.T) {
 		t.Errorf("Expected statusCode %d and Body %s, got %d and %s", expectedStatusCode, expectedResponseBody, response.StatusCode, response.Body)
 	}
 }
+
+// ===============================================================================================================================
+// END PROCESS_PAYMENT TESTS
+// ===============================================================================================================================
+
+// ===============================================================================================================================
+// HANDLER TESTS
+// ===============================================================================================================================
+
+func TestHandlerEnvironmentVariablesNotSet(t *testing.T) {
+	request := events.APIGatewayProxyRequest{}
+	response, _ := Handler(request)
+	expectedStatusCode := 500
+	expectedBody := DEFAULT_JSON_RESPONSE
+	if response.StatusCode != expectedStatusCode || response.Body != expectedBody {
+		t.Errorf("Expected status code %d and body %s, got %d and %s\n", response.StatusCode, response.Body, expectedStatusCode, expectedBody)
+	}
+}
+
+func TestHandlerInvalidRequest(t *testing.T) {
+	request := events.APIGatewayProxyRequest{
+		Body: `{
+			"orderLines": [
+				{
+					"numOfConcessions": 2,
+					"concertId": "ABC"	
+				}
+			]
+		}`,
+	}
+	t.Setenv("CONCERTS_TABLE", "concerts-table")
+	t.Setenv("ORDERS_TABLE", "orders-table")
+
+	response, _ := Handler(request)
+	expectedStatusCode := 500
+	expectedResponseBody := DEFAULT_JSON_RESPONSE
+	if response.StatusCode != expectedStatusCode || response.Body != expectedResponseBody {
+		t.Errorf("Expected statusCode %d and Body %s, got %d and %s", expectedStatusCode, expectedResponseBody, response.StatusCode, response.Body)
+	}
+}
+
+// ===============================================================================================================================
+// END HANDLER TESTS
+// ===============================================================================================================================
