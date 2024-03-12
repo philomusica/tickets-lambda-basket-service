@@ -6,7 +6,7 @@ REPORT:=./report
 
 $(BINARY):
 	mkdir -p $(BINDIR)
-	GOARCH=amd64 GOOS=linux go build -tags lambda.norpc -o $(BINDIR)/$(BINARY) $(CMD)
+	GOARCH=amd64 GOOS=linux CGO_ENABLED=0 go build -tags lambda.norpc -o $(BINDIR)/$(BINARY) $(CMD)
 
 .PHONY: deps clean build deploy test vet fmt
 deps:
