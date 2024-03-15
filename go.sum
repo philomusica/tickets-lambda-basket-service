@@ -16,6 +16,8 @@ github.com/aws/aws-sdk-go v1.45.24 h1:TZx/CizkmCQn8Rtsb11iLYutEQVGK5PK9wAhwouELB
 github.com/aws/aws-sdk-go v1.45.24/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go v1.50.37 h1:gnAf6eYPSTb4QpVwugtWFqD07QXOoX7LewRrtLUx3lI=
 github.com/aws/aws-sdk-go v1.50.37/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.51.0 h1:EA6GlEYMT3ouCO+v+oTWzKB/vcoHD2T9H9qulRx3lPg=
+github.com/aws/aws-sdk-go v1.51.0/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=
@@ -42,6 +44,10 @@ github.com/philomusica/tickets-lambda-utils v0.2.0 h1:ziHeIdmv907GodL6ZCuYi3DIlP
 github.com/philomusica/tickets-lambda-utils v0.2.0/go.mod h1:kdyNNp5zLa+cCgU8dwh5yFESG6a3Acwor4rXTJO8B0g=
 github.com/philomusica/tickets-lambda-utils v1.0.0 h1:sgHiZbv45yXt63hdRNaTKSHK6TCL/wAGxWhBoFjL2Dw=
 github.com/philomusica/tickets-lambda-utils v1.0.0/go.mod h1:kdyNNp5zLa+cCgU8dwh5yFESG6a3Acwor4rXTJO8B0g=
+github.com/philomusica/tickets-lambda-utils v1.2.0 h1:2zHLZJPvGYfBEzW8CiLudpCJ/4rvfmJiWYHZ9/JhYho=
+github.com/philomusica/tickets-lambda-utils v1.2.0/go.mod h1:kdyNNp5zLa+cCgU8dwh5yFESG6a3Acwor4rXTJO8B0g=
+github.com/philomusica/tickets-lambda-utils v1.3.0 h1:c1/+xK2F6d14Lh+NprDJ73/4YUr6ijsDImEKYXyXqI8=
+github.com/philomusica/tickets-lambda-utils v1.3.0/go.mod h1:kdyNNp5zLa+cCgU8dwh5yFESG6a3Acwor4rXTJO8B0g=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
